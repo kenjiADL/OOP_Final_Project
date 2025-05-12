@@ -1,21 +1,25 @@
 #include "SalesData.h"
 
-// Initializes revenue and counts to zero.
 SalesData::SalesData()
-    : mTotalSales(0.0f) {}
+  : mTotalSales(0.0f)
+  , mItemsSold()
+{}
 
-float SalesData::getTotalSales() const
-{
+void SalesData::recordSale(const std::string& code, float price) {
+    mTotalSales += price;
+    // increment existing or insert new
+    auto it = mItemsSold.find(code);
+    if (it != mItemsSold.end()) {
+        it->second++;
+    } else {
+        mItemsSold[code] = 1;
+    }
+}
+
+float SalesData::getTotalSales() const {
     return mTotalSales;
 }
 
-const std::map<int, int> &SalesData::getItemsSold() const
-{
+const std::map<std::string,int>& SalesData::getItemsSold() const {
     return mItemsSold;
-}
-
-void SalesData::recordSale(int code, float price)
-{
-    mTotalSales += price;
-    mItemsSold[code] += 1;
 }

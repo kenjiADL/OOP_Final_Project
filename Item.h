@@ -3,27 +3,31 @@
 
 #include <string>
 
-// Represents a single item in the vending machine.
-class Item
-{
+// Represents a single product in the vending machine.
+class Item {
 public:
-    // Constructs an Item with a selection code, name, price, and quantity.
-    Item(int code, const std::string &name, float price, int quantity);
+    // Constructs an Item with an alphanumeric code (e.g. "A1"), name, price, and starting quantity.
+    Item(const std::string &code,
+         const std::string &name,
+         float price,
+         int quantity);
 
-    // Accessors:
-    int getCode() const;
-    const std::string &getName() const;
-    float getPrice() const;
-    int getQuantity() const;
+    // Accessors
+    const std::string &getCode()     const;
+    const std::string &getName()     const;
+    float               getPrice()   const;
+    int                 getQuantity()const;
 
-    // Decrease stock by one after a sale.
-    void reduceQuantity();
+    // Mutators
+    void reduceQuantity();          // decrement stock by one
+    void setPrice(float newPrice);  // update the unit price
+    void setQuantity(int newQty);   // update the stock level
 
 private:
-    int mCode;
+    std::string mCode;
     std::string mName;
-    float mPrice;
-    int mQuantity;
+    float       mPrice;
+    int         mQuantity;
 };
 
 #endif // ITEM_H

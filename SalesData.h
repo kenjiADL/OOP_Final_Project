@@ -1,27 +1,25 @@
-#ifndef SALESDATA_H
-#define SALESDATA_H
+#ifndef SALES_DATA_H
+#define SALES_DATA_H
 
+#include <string>
 #include <map>
 
-// Tracks total sales and quantities sold per item.
-class SalesData
-{
-public:
-    // Initializes sales totals.
-    SalesData();
-
-    // Returns total revenue.
-    float getTotalSales() const;
-
-    // Returns map of item code to quantity sold.
-    const std::map<int, int> &getItemsSold() const;
-
-    // Records a sale for given item code and price.
-    void recordSale(int code, float price);
-
+class SalesData {
 private:
     float mTotalSales;
-    std::map<int, int> mItemsSold;
+    std::map<std::string,int> mItemsSold;
+
+public:
+    SalesData();
+
+    // Record a sale: add price to total and increment count for this code
+    void recordSale(const std::string& code, float price);
+
+    // Get total revenue
+    float getTotalSales() const;
+
+    // Get map of code → quantity sold
+    const std::map<std::string,int>& getItemsSold() const;
 };
 
-#endif // SALESDATA_H
+#endif // SALES_DATA_H
