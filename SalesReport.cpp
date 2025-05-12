@@ -4,11 +4,11 @@
 #include <string>
 // Initializes revenue and counts to zero.
 SalesReport::SalesReport()
-    : pTotalSales(0.0f) {}
+    : pTotalSalesCents(0) {}
 
 float SalesReport::getTotalSales() const
 {
-    return pTotalSales;
+    return pTotalSalesCents / 100.0f;
 }
 
 const std::map<int, int>& SalesReport::getItemsSold() const
@@ -16,9 +16,9 @@ const std::map<int, int>& SalesReport::getItemsSold() const
     return pItemsSold;
 }
 
-void SalesReport::recordSale(int code, float price)
+void SalesReport::recordSale(int code, int priceCents)
 {
-    pTotalSales += price;
+    pTotalSalesCents += priceCents;
     pItemsSold[code] += 1;
 }
 // Load all past purchases so totalSales and counts are cumulative.
@@ -39,6 +39,7 @@ void SalesReport::loadFromLog(const std::string& logFile) {
         }
         float price;
         ss >> price;
-        recordSale(code, price);
+        int priceCents = static_cast<int>(std::round(price * 100));
+        recordSale(code, priceCents);
     }
 }

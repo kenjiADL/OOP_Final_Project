@@ -16,12 +16,12 @@ class SalesReport
   // Returns map of item code to quantity sold.
   const std::map<int, int>& getItemsSold() const;
 
-  // Records a sale for given item code and price.
-  void recordSale(int code, float price);
+  // Records a sale for given item code and price in cents.
+  void recordSale(int code, int priceCents);
   // Load historical sales from the log file.
   void loadFromLog(const std::string& logFile);
 
  private:
-  float pTotalSales;
+  int pTotalSalesCents;
   std::map<int, int> pItemsSold;
 };

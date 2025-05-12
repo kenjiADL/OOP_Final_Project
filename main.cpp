@@ -43,9 +43,11 @@ void saveInventory(const std::vector<std::unique_ptr<Product>>& inventory) {
     }
     for (const auto& item : inventory) {
         float priceFloat = item->getPrice() / 100.0f;
+        std::string type = dynamic_cast<Drink*>(item.get()) ? "drink" : "snack";
         out << item->getCode()   << ','
             << item->getName()     << ','
-            << priceFloat      << ','
+            << type << ','
+            << std::fixed << std::setprecision(2) << priceFloat << ','
             << item->getQuantity() << '\n';
     }
 }
@@ -89,14 +91,19 @@ int main() {
             std::getline(ss, token, ',');
             std::string name = token;
             std::getline(ss, token, ',');
+            std::string type = token;
+            std::getline(ss, token, ',');
             float priceFloat = std::stof(token);
             int priceCents = static_cast<int>(std::round(priceFloat * 100));
             std::getline(ss, token, ',');
             int qty = std::stoi(token);
-            // For now, load all items as Snack; later you can dispatch to Drink based on data.
-            inventory.emplace_back(
-                std::make_unique<Snack>(code, name, priceCents, qty)
-            );
+
+            if (type == "drink") {
+                bool isDiet = name.find("Diet") != std::string::npos;
+                inventory.emplace_back(std::make_unique<Drink>(code, name, priceCents, qty, isDiet));
+            } else {
+                inventory.emplace_back(std::make_unique<Snack>(code, name, priceCents, qty));
+            }
         }
     }
 
@@ -223,8 +230,8 @@ int main() {
         cashRegister.addPayment(payment.getChargedAmount());
     }
     (*it)->reduceQuantity();
-    salesData.recordSale(code, itemPriceCents / 100.0f); // keep float for log
-    logPurchase(code, (*it)->describe(), itemPriceCents / 100.0f);
+    salesData.recordSale(code, itemPriceCents);
+    logPurchase(code, (*it)->getName(), itemPriceCents / 100.0f);
     saveInventory(inventory);
 
     // Calculate and dispense change in coins.

@@ -79,6 +79,10 @@ void Admin::setItemPrice(int code, int newPriceCents) {
         std::cout << "Invalid code. Price not updated.\n";
         return;
     }
+    if (newPriceCents < 0) {
+        std::cout << "Invalid price. Price must be non-negative.\n";
+        return;
+    }
     (*it)->setPrice(newPriceCents);
     saveInventory();
     std::cout << "Price updated.\n";
