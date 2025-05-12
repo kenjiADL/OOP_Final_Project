@@ -1,33 +1,32 @@
-#ifndef ITEM_H
-#define ITEM_H
+#pragma once
 
 #include <string>
 
-// Represents a single product in the vending machine.
-class Item {
-public:
-    // Constructs an Item with an alphanumeric code (e.g. "A1"), name, price, and starting quantity.
-    Item(const std::string &code,
-         const std::string &name,
-         float price,
-         int quantity);
+// A product in the vending machine with code, name, price, and stock.
+class Item
+{
+ public:
+  // Create a product with its selection code, display name, price in cents, and starting stock.
+  Item(int code, const std::string &name, int priceCents, int quantity);
 
-    // Accessors
-    const std::string &getCode()     const;
-    const std::string &getName()     const;
-    float               getPrice()   const;
-    int                 getQuantity()const;
+  // Getters:
+  int getCode() const;
+  const std::string &getName() const;
+  int getPrice() const;
+  int getQuantity() const;
 
-    // Mutators
-    void reduceQuantity();          // decrement stock by one
-    void setPrice(float newPrice);  // update the unit price
-    void setQuantity(int newQty);   // update the stock level
+  // Reduce the stock by one when sold.
+  void reduceQuantity();
 
-private:
-    std::string mCode;
-    std::string mName;
-    float       mPrice;
-    int         mQuantity;
+  // Update the item's price in cents.
+  void setPrice(int priceCents);
+
+  // Add more stock to the item.
+  void addStock(int quantity);
+
+ private:
+  int pCode;
+  std::string pName;
+  int pPriceCents;
+  int pQuantity;
 };
-
-#endif // ITEM_H

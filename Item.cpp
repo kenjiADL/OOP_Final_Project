@@ -1,33 +1,24 @@
+// Implementation of the Item class.
 #include "Item.h"
 
-// Constructor
-Item::Item(const std::string &code,
-           const std::string &name,
-           float price,
-           int quantity)
-  : mCode(code)
-  , mName(name)
-  , mPrice(price)
-  , mQuantity(quantity)
-{ }
+Item::Item(int code, const std::string &name, int priceCents, int quantity)
+    : pCode(code), pName(name), pPriceCents(priceCents), pQuantity(quantity) {}
 
-// Accessors
-const std::string &Item::getCode()     const { return mCode; }
-const std::string &Item::getName()     const { return mName; }
-float               Item::getPrice()   const { return mPrice; }
-int                 Item::getQuantity()const { return mQuantity; }
+int Item::getCode() const { return pCode; }
+const std::string &Item::getName() const { return pName; }
+int Item::getPrice() const { return pPriceCents; }
+int Item::getQuantity() const { return pQuantity; }
 
-// Reduce stock by one
-void Item::reduceQuantity() {
-    if (mQuantity > 0) --mQuantity;
+void Item::reduceQuantity()
+{
+    if (pQuantity > 0)
+        --pQuantity;
 }
 
-// Change the unit price
-void Item::setPrice(float newPrice) {
-    mPrice = newPrice;
+void Item::setPrice(int priceCents) {
+    pPriceCents = priceCents;
 }
 
-// Set the stock level
-void Item::setQuantity(int newQty) {
-    mQuantity = newQty;
+void Item::addStock(int quantity) {
+    pQuantity += quantity;
 }

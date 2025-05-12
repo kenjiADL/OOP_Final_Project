@@ -3,168 +3,169 @@
 #include <fstream>
 #include <algorithm>
 #include <string>
-#include <iomanip>
 #include <limits>
 #include <chrono>
 #include <ctime>
-
+#include <sstream>
+#include <iomanip>
+#include <cmath>
+#include <memory>
+#include "Product.h"
+#include "Snack.h"
+#include "Drink.h"
+#include "Admin.h"
 #include "Item.h"
-#include "CashRegister.h"
+#include "CRegister.h"
 #include "Payment.h"
-#include "SalesData.h"
+#include "Change.h"
+#include "SalesReport.h"
 #include "PaymentMethod.h"
 
-static const std::string INVENTORY_FILE   = "inventory.txt";
-static const std::string ADMIN_LOG_FILE   = "purchase_history.txt";
-static const std::string ADMIN_TRIGGER    = "S";
-static const std::string SECRET_PASSWORD  = "admin123";
-
-// 20% off between 16:00–18:00
-bool isHappyHour() {
-    using namespace std::chrono;
-    auto now    = system_clock::now();
-    time_t t    = system_clock::to_time_t(now);
-    tm localTm  = *std::localtime(&t);
-    return (localTm.tm_hour >= 16 && localTm.tm_hour < 18);
+// Show all items with their codes, descriptions, and quantities.
+static void printInventory(const std::vector<std::unique_ptr<Product>>& inventory) {
+    for (const auto& p : inventory) {
+        std::cout << p->getCode() << ": "
+                  << p->describe()
+                  << " x" << p->getQuantity() << "\n";
+    }
 }
 
-// Overwrite inventory.txt with current stock
-void saveInventory(const std::vector<Item>& inv) {
-    std::ofstream out(INVENTORY_FILE);
+static const std::string kInventoryFile   = "inventory.txt";
+static const std::string kAdminLogFile   = "purchase_history.txt";
+static const std::string kSecretPassword  = "admin123";
+static const std::string kAdminTrigger    = "S";
+
+// Save the current inventory to the file so changes are persistent.
+void saveInventory(const std::vector<std::unique_ptr<Product>>& inventory) {
+    std::ofstream out(kInventoryFile);
     if (!out) {
-        std::cerr << "ERROR: cannot write " << INVENTORY_FILE << "\n";
+        std::cerr << "ERROR: could not write " << kInventoryFile << "\n";
         return;
     }
-    for (const auto& it : inv) {
-        out << it.getCode()   << ' '
-            << it.getName()   << ' '
-            << it.getPrice()  << ' '
-            << it.getQuantity()
-            << '\n';
+    for (const auto& item : inventory) {
+        float priceFloat = item->getPrice() / 100.0f;
+        out << item->getCode()   << ','
+            << item->getName()     << ','
+            << priceFloat      << ','
+            << item->getQuantity() << '\n';
     }
 }
 
-// Append one purchase record
-void logPurchase(const std::string& code,
+// Append a purchase entry to the admin log with timestamp.
+void logPurchase(int code,
                  const std::string& name,
                  float totalCost)
 {
-    std::ofstream log(ADMIN_LOG_FILE, std::ios::app);
+    std::ofstream log(kAdminLogFile, std::ios::app);
     if (!log) {
-        std::cerr << "ERROR: cannot write " << ADMIN_LOG_FILE << "\n";
+        std::cerr << "ERROR: could not write " << kAdminLogFile << "\n";
         return;
     }
+    // Get current time for the log entry.
     auto now = std::chrono::system_clock::now();
-    time_t t = std::chrono::system_clock::to_time_t(now);
+    std::time_t t = std::chrono::system_clock::to_time_t(now);
+
+    // Log format: code, item name in quotes, cost, and timestamp YYYY-MM-DD HH:MM:SS.
     char buf[32];
     std::strftime(buf, sizeof(buf), "%F %T", std::localtime(&t));
-    log << code << ' '
-        << name << ' '
-        << totalCost << ' '
-        << buf << '\n';
+    log << code << ' ' << '"' << name << '"' << ' ' << totalCost << ' ' << buf << '\n';
 }
 
 int main() {
-    // --- Load inventory ---
-    std::vector<Item> inventory;
+    // Load inventory from the default file (not user-configurable).
+    std::vector<std::unique_ptr<Product>> inventory;
     {
-        std::ifstream in(INVENTORY_FILE);
+        std::ifstream in(kInventoryFile);
         if (!in) {
-            std::cerr << "Failed to open " << INVENTORY_FILE << "\n";
+            std::cerr << "Failed to open " << kInventoryFile << "\n";
             return 1;
         }
-        std::string code, name;
-        float price;
-        int qty;
-        while (in >> code >> name >> price >> qty) {
-            inventory.emplace_back(code, name, price, qty);
+        std::string line;
+        while (std::getline(in, line)) {
+            if (line.empty()) continue;
+            std::stringstream ss(line);
+            std::string token;
+            std::getline(ss, token, ',');
+            int code = std::stoi(token);
+            std::getline(ss, token, ',');
+            std::string name = token;
+            std::getline(ss, token, ',');
+            float priceFloat = std::stof(token);
+            int priceCents = static_cast<int>(std::round(priceFloat * 100));
+            std::getline(ss, token, ',');
+            int qty = std::stoi(token);
+            // For now, load all items as Snack; later you can dispatch to Drink based on data.
+            inventory.emplace_back(
+                std::make_unique<Snack>(code, name, priceCents, qty)
+            );
         }
     }
 
-    SalesData    salesData;
-    CashRegister cashRegister;
+    SalesReport    salesData;
+    // Load previous sales from log to build up totals.
+    salesData.loadFromLog(kAdminLogFile);
+    CRegister cashRegister;
+    // Greet the user and display available items.
+    std::cout << "Welcome to the Vending Machine Simulator!\n\n";
+    std::cout << "Available Items:\n";
+    printInventory(inventory);
+    std::cout << "\n";
 
-    // --- Display as ASCII table ---
-    std::cout
-      << "+------+------------------+--------+-----+\n"
-      << "| Code | Name             | Price  | Qty |\n"
-      << "+------+------------------+--------+-----+\n";
-    for (const auto& it : inventory) {
-        std::cout
-          << "| " << std::setw(4) << it.getCode()   << " "
-          << "| " << std::setw(16)<< it.getName()   << " "
-          << "| " << std::setw(6)
-                   << std::fixed<<std::setprecision(2)
-                   << it.getPrice()                 << " "
-          << "| " << std::setw(3) << it.getQuantity() << " |\n";
-    }
-    std::cout
-      << "+------+------------------+--------+-----+\n\n";
-
-    // --- Prompt for code or admin ---
+    // single-purchase loop
     std::string input;
-    std::cout 
-      << "Enter item code to purchase ("
-      << ADMIN_TRIGGER << " for admin): ";
+    std::cout << "Enter item code to purchase ("
+              << kAdminTrigger << " for admin): ";
     std::cin >> input;
 
-    // --- Admin flow ---
-    if (input == ADMIN_TRIGGER) {
+    // Enter admin mode if triggered and authenticated.
+    if (input == kAdminTrigger) {
         std::cout << "Enter secret password: ";
-        std::string pw; std::cin >> pw;
-        if (pw == SECRET_PASSWORD) {
-            while (true) {
-                std::cout
-                  << "\n-- Admin Menu --\n"
-                  << "1) Set item price\n"
-                  << "2) Change stock\n"
-                  << "3) Exit admin\n"
-                  << "Select option: ";
-                int opt; std::cin >> opt;
-
-                if (opt == 1) {
-                    std::cout << "Enter code to change price: ";
-                    std::string code; std::cin >> code;
-                    auto it = std::find_if(
-                        inventory.begin(), inventory.end(),
-                        [&](auto &i){ return i.getCode() == code; }
-                    );
-                    if (it == inventory.end()) {
-                        std::cout << "Code not found.\n";
-                    } else {
-                        std::cout << "Current price: $"
-                                  << it->getPrice()
-                                  << "\nNew price: $";
-                        float np; std::cin >> np;
-                        it->setPrice(np);
-                        saveInventory(inventory);
-                        std::cout << "Price updated.\n";
+        std::string pw;
+        std::cin >> pw;
+        if (pw == kSecretPassword) {
+            Admin admin(inventory, salesData, cashRegister, kInventoryFile, kAdminLogFile);
+            bool done = false;
+            while (!done) {
+                std::cout << "\n-- Admin Menu --\n"
+                          << "1) Remove Item\n"
+                          << "2) Show Sales Report\n"
+                          << "3) Set Item Price\n"
+                          << "4) Restock Item\n"
+                          << "5) Exit Admin\n"
+                          << "Select option: ";
+                int opt;
+                std::cin >> opt;
+                switch (opt) {
+                    case 1: {
+                        std::cout << "Enter code to remove: ";
+                        int code; std::cin >> code;
+                        admin.removeItem(code);
+                        break;
                     }
-                }
-                else if (opt == 2) {
-                    std::cout << "Enter code to change stock: ";
-                    std::string code; std::cin >> code;
-                    auto it = std::find_if(
-                        inventory.begin(), inventory.end(),
-                        [&](auto &i){ return i.getCode() == code; }
-                    );
-                    if (it == inventory.end()) {
-                        std::cout << "Code not found.\n";
-                    } else {
-                        std::cout << "Current quantity: "
-                                  << it->getQuantity()
-                                  << "\nNew quantity: ";
-                        int nq; std::cin >> nq;
-                        it->setQuantity(nq);
-                        saveInventory(inventory);
-                        std::cout << "Stock updated.\n";
+                    case 2:
+                        admin.showSalesReport();
+                        break;
+                    case 3: {
+                        std::cout << "Enter code to update price: ";
+                        int code; std::cin >> code;
+                        std::cout << "Enter new price (e.g. 1.50): ";
+                        float p; std::cin >> p;
+                        admin.setItemPrice(code, static_cast<int>(std::round(p * 100)));
+                        break;
                     }
-                }
-                else if (opt == 3) {
-                    break;
-                }
-                else {
-                    std::cout << "Invalid option; enter 1, 2, or 3.\n";
+                    case 4: {
+                        std::cout << "Enter code to restock: ";
+                        int code; std::cin >> code;
+                        std::cout << "Enter quantity to add: ";
+                        int qty; std::cin >> qty;
+                        admin.restockItem(code, qty);
+                        break;
+                    }
+                    case 5:
+                        done = true;
+                        break;
+                    default:
+                        std::cout << "Invalid option.\n";
                 }
             }
         } else {
@@ -173,79 +174,70 @@ int main() {
         return 0;
     }
 
-    // --- Customer flow ---
+    // Convert input into item code, handling errors.
+    int code = 0;
+    try {
+        size_t pos;
+        code = std::stoi(input, &pos);
+        if (pos != input.size()) throw std::invalid_argument("");
+    } catch (...) {
+        std::cout << "Invalid code entry.\n";
+        return 0;
+    }
+
+    // Locate the item by its code and check stock.
     auto it = std::find_if(
         inventory.begin(), inventory.end(),
-        [&](const Item& i){ return i.getCode() == input; }
+        [&](const std::unique_ptr<Product>& i){ return i->getCode() == code; }
     );
-    if (it == inventory.end() || it->getQuantity() == 0) {
+    if (it == inventory.end() || (*it)->getQuantity() == 0) {
         std::cout << "Invalid code or out of stock.\n";
         return 0;
     }
 
-    // Payment method selection
-    int pm = 0;
-    while (true) {
-        std::cout << "Payment method (1=Cash, 2=Card): ";
-        if (!(std::cin >> pm) || (pm != 1 && pm != 2)) {
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            std::cout << "Please enter 1 or 2.\n";
-            continue;
-        }
-        break;
-    }
-    PaymentMethod method = (pm == 2 ? PaymentMethod::Card : PaymentMethod::Cash);
+    // Ask customer for payment method: cash or card.
+    std::cout << "Payment method (1 = Cash, 2 = Card): ";
+    int pm; std::cin >> pm;
+    PaymentMethod method =
+        (pm == 2 ? PaymentMethod::Card : PaymentMethod::Cash);
 
-    // Calculate price + discount + surcharge
-    float itemPrice = it->getPrice();
-    if (isHappyHour()) {
-        std::cout << "*** Happy Hour! 20% off! ***\n";
-        itemPrice *= 0.80f;
-    }
-    float surcharge = (method == PaymentMethod::Card ? 0.25f : 0.0f);
-    float totalCost = itemPrice + surcharge;
+    // Calculate payment amount in cents.
+    int itemPriceCents = (*it)->getPrice();
+    Payment payment(0, method);
 
-    // Show card charge if card
-    if (method == PaymentMethod::Card) {
-        std::cout << "Card charged (including surcharge): $"
-                  << std::fixed << std::setprecision(2)
-                  << totalCost << "\n";
-    }
-
-    // Handle payment input
-    float paidAmount = 0.0f;
     if (method == PaymentMethod::Cash) {
-        while (true) {
-            std::cout << "Enter payment amount: ";
-            if (!(std::cin >> paidAmount) || paidAmount < totalCost) {
-                std::cin.clear();
-                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                std::cout << "Need at least $"
-                          << std::fixed << std::setprecision(2)
-                          << totalCost << "\n";
-                continue;
-            }
-            break;
+        std::cout << "Enter payment amount: ";
+        float amtInput; std::cin >> amtInput;
+        int amtCents = static_cast<int>(std::round(amtInput * 100));
+        payment = Payment(amtCents, method);
+        if (payment.getChargedAmount() < itemPriceCents) {
+            std::cout << "Insufficient funds.\n";
+            return 0;
         }
     } else {
-        // For card, treat paidAmount = totalCost
-        paidAmount = totalCost;
+        // card: no prompt, just set base amount = price
+        payment = Payment(itemPriceCents, method);
     }
 
-    // Finalize sale
-    cashRegister.addPayment(totalCost);
-    it->reduceQuantity();
-    std::cout << "(Item dispensed)\n";
-    salesData.recordSale(input, totalCost);
-    logPurchase(input, it->getName(), totalCost);
+    // Process the sale: update cash, stock, sales data, and log.
+    if (payment.getMethod() == PaymentMethod::Cash) {
+        cashRegister.addPayment(payment.getChargedAmount());
+    }
+    (*it)->reduceQuantity();
+    salesData.recordSale(code, itemPriceCents / 100.0f); // keep float for log
+    logPurchase(code, (*it)->describe(), itemPriceCents / 100.0f);
     saveInventory(inventory);
 
-    // Simple change = paidAmount - totalCost
-    float changeAmt = paidAmount - totalCost;
-    std::cout << "Change returned: $"
-              << std::fixed << std::setprecision(2)
-              << changeAmt << "\n";
+    // Calculate and dispense change in coins.
+    int changeDue = payment.getAmount() - itemPriceCents;
+    int changeAmt = cashRegister.dispenseChange(changeDue);
+    Change change(changeAmt);
+    std::cout << "Change returned:\n";
+    for (auto& p : change.getChangeBreakdown()) {
+        std::cout
+            << p.first << "c x "
+            << p.second << " coins\n";
+    }
 
     std::cout << "\nThank you for your purchase!\n";
     return 0;

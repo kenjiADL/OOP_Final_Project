@@ -1,10 +1,7 @@
-#ifndef PAYMENTMETHOD_H
-#define PAYMENTMETHOD_H
+#pragma once
 
 enum class PaymentMethod
 {
     Cash,
     Card
 };
-
-#endif

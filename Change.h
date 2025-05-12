@@ -1,20 +1,17 @@
-#ifndef CHANGE_H
-#define CHANGE_H
+#pragma once
 
 #include <map>
 
-// Calculates the breakdown of change into coin denominations.
+// Figure out how to split an amount in cents into coins.
 class Change
 {
-public:
-    // Constructs a Change object that computes breakdown for the given amount.
-    Change(float amount);
+ public:
+  // Build a Change object to calculate coin counts for the given cents.
+  explicit Change(int cents);
 
-    // Returns a map of coin value (in cents) to quantity.
-    std::map<int, int> getChangeBreakdown() const;
+  // Get a map from coin values to their counts.
+  std::map<int, int> getChangeBreakdown() const;
 
-private:
-    std::map<int, int> mChangeBreakdown;
+ private:
+  std::map<int, int> pChangeBreakdown;
 };
-
-#endif // CHANGE_H

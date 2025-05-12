@@ -1,23 +1,24 @@
 #include "Payment.h"
 
-// Constructs a Payment with amount and method.
-Payment::Payment(float amount, PaymentMethod method) : mAmount(amount), mMethod(method) {}
+// Constructs a Payment with amount (in cents) and method.
+Payment::Payment(int amountCents, PaymentMethod method)
+    : pAmountCents(amountCents), pMethod(method) {}
 
-float Payment::getAmount() const
+int Payment::getAmount() const
 {
-    return mAmount;
+    return pAmountCents;
 }
 
 PaymentMethod Payment::getMethod() const
 {
-    return mMethod;
+    return pMethod;
 }
 
-float Payment::getChargedAmount() const
+int Payment::getChargedAmount() const
 {
-    if (mMethod == PaymentMethod::Card)
+    if (pMethod == PaymentMethod::Card)
     {
-        return mAmount + CARD_SURCHARGE;
+        return pAmountCents + CARD_SURCHARGE_CENTS;
     }
-    return mAmount;
+    return pAmountCents;
 }
