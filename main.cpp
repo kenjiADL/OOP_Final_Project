@@ -14,7 +14,6 @@
 #include "Snack.h"
 #include "Drink.h"
 #include "Admin.h"
-#include "Item.h"
 #include "CRegister.h"
 #include "Payment.h"
 #include "Change.h"

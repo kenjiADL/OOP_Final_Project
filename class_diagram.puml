@@ -28,22 +28,8 @@ class Drink {
 }
 
 Product <|-- Snack
-Snack <|-- Drink
+Product <|-- Drink
 
-class Item {
-  - pCode: int
-  - pName: string
-  - pPriceCents: int
-  - pQuantity: int
-  --
-  + getCode(): int
-  + getName(): string
-  + getPrice(): int
-  + getQuantity(): int
-  + reduceQuantity(): void
-  + setPrice(p: int): void
-  + addStock(q: int): void
-}
 
 class Payment {
   - pAmountCents: int
@@ -101,7 +87,7 @@ Admin o-- "*" Product
 ' Show runtime usage dependencies
 Payment ..> Change        : computes change
 CRegister --> Change      : creates change
-main ..> Item             : looks up by code
+main ..> Product          : looks up by code
 main ..> Payment          : constructs payment
 main ..> CRegister        : addPayment/dispenseChange
 main ..> Change           : uses for coin breakdown
