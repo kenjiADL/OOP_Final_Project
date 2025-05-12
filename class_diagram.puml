@@ -1,0 +1,110 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+
+
+
+abstract class Product {
+  - code: int
+  - name: string
+  - price: int
+  - quantity: int
+  --
+  + describe(): string
+  + getName(): string
+  + getPrice(): int
+  + getQuantity(): int
+  + reduceQuantity(): void
+  + addStock(q: int): void
+  + setPrice(p: int): void
+}
+
+class Snack {
+  + describe(): string
+}
+class Drink {
+  - diet: bool
+  + describe(): string
+}
+
+Product <|-- Snack
+Snack <|-- Drink
+
+class Item {
+  - pCode: int
+  - pName: string
+  - pPriceCents: int
+  - pQuantity: int
+  --
+  + getCode(): int
+  + getName(): string
+  + getPrice(): int
+  + getQuantity(): int
+  + reduceQuantity(): void
+  + setPrice(p: int): void
+  + addStock(q: int): void
+}
+
+class Payment {
+  - pAmountCents: int
+  - pMethod: PaymentMethod
+  --
+  + getAmount(): int
+  + getMethod(): PaymentMethod
+  + getChargedAmount(): int
+}
+
+class CRegister {
+  - pBalanceCents: int
+  --
+  + getBalance(): int
+  + addPayment(a: int): void
+  + dispenseChange(a: int): int
+}
+
+class Change {
+  - pChangeBreakdown: Map<int,int>
+  --
+  + Change(cents: int)
+  + getChangeBreakdown(): Map<int,int>
+}
+
+class SalesReport {
+  - pTotalSales: float
+  - pItemsSold: Map<int,int>
+  --
+  + getTotalSales(): float
+  + getItemsSold(): Map<int,int>
+  + recordSale(code: int, price: float): void
+  + loadFromLog(file: string): void
+}
+
+class Admin {
+  - pInventory: List<Product>
+  - pSalesData: SalesReport
+  - pCashRegister: CRegister
+  - pInventoryFile: string
+  - pAdminLogFile: string
+  --
+  + removeItem(code: int): void
+  + showSalesReport(): void
+  + setItemPrice(code: int, p: int): void
+  + restockItem(code: int, q: int): void
+}
+
+
+Admin o-- "1" CRegister
+Admin o-- "1" SalesReport
+
+Admin o-- "*" Product
+
+' Show runtime usage dependencies
+Payment ..> Change        : computes change
+CRegister --> Change      : creates change
+main ..> Item             : looks up by code
+main ..> Payment          : constructs payment
+main ..> CRegister        : addPayment/dispenseChange
+main ..> Change           : uses for coin breakdown
+
+
+@enduml
