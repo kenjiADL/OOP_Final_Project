@@ -43,11 +43,15 @@ TEST_SRCS = tests/test_snack_gtest.cpp \
             tests/test_drink_gtest.cpp \
             tests/test_payment_gtest.cpp \
             tests/test_cregister_gtest.cpp \
-            tests/test_change_gtest.cpp
+            tests/test_change_gtest.cpp \
+            tests/test_admin_gtest.cpp \
+            tests/test_product_gtest.cpp \
+            tests/test_salesreport_gtest.cpp
 
 .PHONY: test
 test:
 	$(CXX) $(CXXFLAGS) $(GTEST_INC) -pthread \
-	  $(GTEST_SRCS) $(TEST_SRCS) Payment.cpp CRegister.cpp Change.cpp \
+	  $(GTEST_SRCS) $(TEST_SRCS) \
+	  Admin.cpp Product.cpp Snack.cpp Drink.cpp SalesReport.cpp Payment.cpp CRegister.cpp Change.cpp \
 	  -o test_runner
 	./test_runner
