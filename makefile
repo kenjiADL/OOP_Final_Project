@@ -11,7 +11,8 @@ SRC = main.cpp \
       Admin.cpp \
       Product.cpp \
       Snack.cpp \
-      Drink.cpp
+      Drink.cpp \
+      Alcoholic.cpp
 
 # Object files
 OBJ = $(SRC:.cpp=.o)
@@ -41,6 +42,7 @@ GTEST_INC = -I$(GTEST_DIR)/googletest/include -I$(GTEST_DIR)/googletest -I.
 GTEST_SRCS = $(GTEST_DIR)/googletest/src/gtest-all.cc $(GTEST_DIR)/googletest/src/gtest_main.cc
 TEST_SRCS = tests/test_snack_gtest.cpp \
             tests/test_drink_gtest.cpp \
+            tests/test_alcoholic_gtest.cpp \
             tests/test_payment_gtest.cpp \
             tests/test_cregister_gtest.cpp \
             tests/test_change_gtest.cpp \
@@ -52,6 +54,6 @@ TEST_SRCS = tests/test_snack_gtest.cpp \
 test:
 	$(CXX) $(CXXFLAGS) $(GTEST_INC) -pthread \
 	  $(GTEST_SRCS) $(TEST_SRCS) \
-	  Admin.cpp Product.cpp Snack.cpp Drink.cpp SalesReport.cpp Payment.cpp CRegister.cpp Change.cpp \
+	  Admin.cpp Product.cpp Snack.cpp Drink.cpp Alcoholic.cpp SalesReport.cpp Payment.cpp CRegister.cpp Change.cpp \
 	  -o test_runner
 	./test_runner

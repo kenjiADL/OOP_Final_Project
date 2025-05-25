@@ -13,6 +13,7 @@
 #include "Product.h"
 #include "Snack.h"
 #include "Drink.h"
+#include "Alcoholic.h"
 #include "Admin.h"
 #include "CRegister.h"
 #include "Payment.h"
@@ -43,7 +44,14 @@ void saveInventory(const std::vector<std::unique_ptr<Product>>& inventory) {
     }
     for (const auto& item : inventory) {
         float priceFloat = item->getPrice() / 100.0f;
-        std::string type = dynamic_cast<Drink*>(item.get()) ? "drink" : "snack";
+        std::string type;
+        if (dynamic_cast<Alcoholic*>(item.get())) {
+            type = "alcoholic";
+        } else if (dynamic_cast<Drink*>(item.get())) {
+            type = "drink";
+        } else {
+            type = "snack";
+        }
         out << item->getCode()   << ','
             << item->getName()     << ','
             << type << ','
@@ -98,7 +106,10 @@ int main() {
             std::getline(ss, token, ',');
             int qty = std::stoi(token);
 
-            if (type == "drink") {
+            if (type == "alcoholic") {
+                bool isDiet = name.find("Diet") != std::string::npos;
+                inventory.emplace_back(std::make_unique<Alcoholic>(code, name, priceCents, qty, isDiet));
+            } else if (type == "drink") {
                 bool isDiet = name.find("Diet") != std::string::npos;
                 inventory.emplace_back(std::make_unique<Drink>(code, name, priceCents, qty, isDiet));
             } else {
@@ -201,6 +212,18 @@ int main() {
         return 0;
     }
 
+    // Check if this is an alcoholic drink and verify age
+    Alcoholic* alcoholicItem = dynamic_cast<Alcoholic*>(it->get());
+    if (alcoholicItem) {
+        std::cout << "This is an alcoholic beverage. Are you 18 years of age or older? (y/n): ";
+        char ageResponse;
+        std::cin >> ageResponse;
+        if (ageResponse != 'y' && ageResponse != 'Y') {
+            std::cout << "Sorry, you must be 18 years or older to purchase alcoholic beverages.\n";
+            return 0;
+        }
+    }
+
     // Ask customer for payment method: cash or card.
     std::cout << "Payment method (1 = Cash, 2 = Card): ";
     int pm; std::cin >> pm;
@@ -221,8 +244,12 @@ int main() {
             return 0;
         }
     } else {
-        // card: no prompt, just set base amount = price
+        // card: set base amount = price, surcharge will be added automatically
         payment = Payment(itemPriceCents, method);
+        std::cout << "Card payment processed. Amount charged: $" 
+                  << std::fixed << std::setprecision(2) 
+                  << (payment.getChargedAmount() / 100.0f) 
+                  << " (includes $0.25 surcharge)\n";
     }
 
     // Process the sale: update cash, stock, sales data, and log.
@@ -230,19 +257,22 @@ int main() {
         cashRegister.addPayment(payment.getChargedAmount());
     }
     (*it)->reduceQuantity();
-    salesData.recordSale(code, itemPriceCents);
-    logPurchase(code, (*it)->getName(), itemPriceCents / 100.0f);
+    // Record the actual charged amount (including surcharge for cards)
+    salesData.recordSale(code, payment.getChargedAmount());
+    logPurchase(code, (*it)->getName(), payment.getChargedAmount() / 100.0f);
     saveInventory(inventory);
 
-    // Calculate and dispense change in coins.
-    int changeDue = payment.getAmount() - itemPriceCents;
-    int changeAmt = cashRegister.dispenseChange(changeDue);
-    Change change(changeAmt);
-    std::cout << "Change returned:\n";
-    for (auto& p : change.getChangeBreakdown()) {
-        std::cout
-            << p.first << "c x "
-            << p.second << " coins\n";
+    // Calculate and dispense change in coins (only for cash payments).
+    if (payment.getMethod() == PaymentMethod::Cash) {
+        int changeDue = payment.getAmount() - itemPriceCents;
+        int changeAmt = cashRegister.dispenseChange(changeDue);
+        Change change(changeAmt);
+        std::cout << "Change returned:\n";
+        for (auto& p : change.getChangeBreakdown()) {
+            std::cout
+                << p.first << "c x "
+                << p.second << " coins\n";
+        }
     }
 
     std::cout << "\nThank you for your purchase!\n";
