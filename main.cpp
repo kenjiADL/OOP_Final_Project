@@ -20,6 +20,7 @@
 #include "Change.h"
 #include "SalesReport.h"
 #include "PaymentMethod.h"
+#include "TransactionHistory.h"
 
 // Show all items with their codes, descriptions, and quantities.
 static void printInventory(const std::vector<std::unique_ptr<Product>>& inventory) {
@@ -122,6 +123,9 @@ int main() {
     // Load previous sales from log to build up totals.
     salesData.loadFromLog(kAdminLogFile);
     CRegister cashRegister;
+    
+    // Create transaction history using raw dynamic memory allocation
+    TransactionHistory* transactionHistory = new TransactionHistory(5);
     // Greet the user and display available items.
     std::cout << "Welcome to the Vending Machine Simulator!\n\n";
     std::cout << "Available Items:\n";
@@ -148,7 +152,8 @@ int main() {
                           << "2) Show Sales Report\n"
                           << "3) Set Item Price\n"
                           << "4) Restock Item\n"
-                          << "5) Exit Admin\n"
+                          << "5) Show Transaction History\n"
+                          << "6) Exit Admin\n"
                           << "Select option: ";
                 int opt;
                 std::cin >> opt;
@@ -179,6 +184,10 @@ int main() {
                         break;
                     }
                     case 5:
+                        // Show transaction history using operator overloading
+                        std::cout << *transactionHistory;
+                        break;
+                    case 6:
                         done = true;
                         break;
                     default:
@@ -188,6 +197,8 @@ int main() {
         } else {
             std::cout << "Incorrect password.\n";
         }
+        // Clean up dynamic memory before exiting
+        delete transactionHistory;
         return 0;
     }
 
@@ -199,6 +210,7 @@ int main() {
         if (pos != input.size()) throw std::invalid_argument("");
     } catch (...) {
         std::cout << "Invalid code entry.\n";
+        delete transactionHistory;  // Clean up before exit
         return 0;
     }
 
@@ -209,6 +221,7 @@ int main() {
     );
     if (it == inventory.end() || (*it)->getQuantity() == 0) {
         std::cout << "Invalid code or out of stock.\n";
+        delete transactionHistory;  // Clean up before exit
         return 0;
     }
 
@@ -220,6 +233,7 @@ int main() {
         std::cin >> ageResponse;
         if (ageResponse != 'y' && ageResponse != 'Y') {
             std::cout << "Sorry, you must be 18 years or older to purchase alcoholic beverages.\n";
+            delete transactionHistory;  // Clean up before exit
             return 0;
         }
     }
@@ -241,6 +255,7 @@ int main() {
         payment = Payment(amtCents, method);
         if (payment.getChargedAmount() < itemPriceCents) {
             std::cout << "Insufficient funds.\n";
+            delete transactionHistory;  // Clean up before exit
             return 0;
         }
     } else {
@@ -261,20 +276,25 @@ int main() {
     salesData.recordSale(code, payment.getChargedAmount());
     logPurchase(code, (*it)->getName(), payment.getChargedAmount() / 100.0f);
     saveInventory(inventory);
+    
+    // Add transaction to history using dynamic memory
+    std::string transactionRecord = "Item: " + (*it)->getName() + 
+                                   ", Price: $" + std::to_string(payment.getChargedAmount() / 100.0f) +
+                                   ", Method: " + (payment.getMethod() == PaymentMethod::Cash ? "Cash" : "Card");
+    transactionHistory->addTransaction(transactionRecord);
 
     // Calculate and dispense change in coins (only for cash payments).
     if (payment.getMethod() == PaymentMethod::Cash) {
         int changeDue = payment.getAmount() - itemPriceCents;
         int changeAmt = cashRegister.dispenseChange(changeDue);
         Change change(changeAmt);
-        std::cout << "Change returned:\n";
-        for (auto& p : change.getChangeBreakdown()) {
-            std::cout
-                << p.first << "c x "
-                << p.second << " coins\n";
-        }
+        // Using operator overloading for displaying change
+        std::cout << change;
     }
 
     std::cout << "\nThank you for your purchase!\n";
+    
+    // Clean up dynamically allocated memory before program ends
+    delete transactionHistory;
     return 0;
 }

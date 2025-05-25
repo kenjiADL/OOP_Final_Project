@@ -12,7 +12,8 @@ SRC = main.cpp \
       Product.cpp \
       Snack.cpp \
       Drink.cpp \
-      Alcoholic.cpp
+      Alcoholic.cpp \
+      TransactionHistory.cpp
 
 # Object files
 OBJ = $(SRC:.cpp=.o)
@@ -48,12 +49,13 @@ TEST_SRCS = tests/test_snack_gtest.cpp \
             tests/test_change_gtest.cpp \
             tests/test_admin_gtest.cpp \
             tests/test_product_gtest.cpp \
-            tests/test_salesreport_gtest.cpp
+            tests/test_salesreport_gtest.cpp \
+            tests/test_transactionhistory_gtest.cpp
 
 .PHONY: test
 test:
 	$(CXX) $(CXXFLAGS) $(GTEST_INC) -pthread \
 	  $(GTEST_SRCS) $(TEST_SRCS) \
-	  Admin.cpp Product.cpp Snack.cpp Drink.cpp Alcoholic.cpp SalesReport.cpp Payment.cpp CRegister.cpp Change.cpp \
+	  Admin.cpp Product.cpp Snack.cpp Drink.cpp Alcoholic.cpp TransactionHistory.cpp SalesReport.cpp Payment.cpp CRegister.cpp Change.cpp \
 	  -o test_runner
 	./test_runner
