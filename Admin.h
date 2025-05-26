@@ -4,57 +4,66 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <stdexcept>
 #include "Product.h"
 #include "SalesReport.h"
 #include "CRegister.h"
 
+using namespace std;
+
 /**
- * @class Admin
- * @brief Controller for vending machine administration tasks, such as managing inventory,
- *        pricing, restocking, and viewing sales reports.
+ * @brief Admin interface for the vending machine
+ * 
+ * Handles inventory management, sales reports, and pricing.
  */
 class Admin {
- public:
-  Admin(std::vector<std::unique_ptr<Product>>& inventory,
-        SalesReport& salesData,
-        CRegister& cashRegister,
-        const std::string& inventoryFile,
-        const std::string& adminLogFile);
+public:
+    // Custom exceptions
+    class InvalidCodeException : public runtime_error {
+        using runtime_error::runtime_error;
+    };
+    
+    class InvalidQuantityException : public runtime_error {
+        using runtime_error::runtime_error;
+    };
 
-  /**
-   * @brief Remove a product from the inventory by code and update the inventory file.
-   * @param code The unique code identifying the product to remove.
-   */
-  void removeItem(int code);
+    // Constructor takes references to required components and file paths
+    Admin(vector<unique_ptr<Product>>& inventory,
+          SalesReport& salesData,
+          CRegister& cashRegister,
+          const string& inventoryFile,
+          const string& adminLogFile);
 
-  /**
-   * @brief Display the cash register balance, total sales, items sold, and raw purchase log.
-   */
-  void showSalesReport() const;
+    // Remove a product from inventory
+    void removeItem(int code);
 
-  /**
-   * @brief Update the price of an item and persist changes to the inventory file.
-   * @param code The code of the product to update.
-   * @param newPriceCents The new price in cents (must be non-negative).
-   */
-  void setItemPrice(int code, int newPriceCents);
+    // Display sales report
+    void showSalesReport() const;
 
-  /**
-   * @brief Add more stock to an existing product and save the updated inventory.
-   * @param code The code of the product to restock.
-   * @param quantity Number of units to add to the current stock.
-   */
-  void restockItem(int code, int quantity);
+    // Update item price (throws InvalidCodeException if code not found)
+    void setItemPrice(int code, int newPriceCents);
 
- private:
-  std::vector<std::unique_ptr<Product>>& pInventory;
-  SalesReport& pSalesData;
-  CRegister& pCashRegister;
-  std::string pInventoryFile;
-  std::string pAdminLogFile;
+    // Restock item (throws InvalidCodeException/InvalidQuantityException)
+    void restockItem(int code, int quantity);
 
-  // Write the current inventory vector back into the CSV file.
-  void saveInventory() const;
+    // Get current inventory size
+    size_t getInventorySize() const;
+
+    // Check if product code exists
+    bool hasProduct(int code) const;
+
+private:
+    vector<unique_ptr<Product>>& inventory;  // Reference to inventory
+    SalesReport& salesData;                 // Reference to sales data
+    CRegister& cashRegister;               // Reference to cash register
+    const string inventoryFile;            // File paths are immutable
+    const string adminLogFile;
+
+    // Find product by code (returns nullptr if not found)
+    Product* findProduct(int code) const;
+
+    // Save current inventory state to CSV file
+    bool saveInventory() const;
 };
 
 #endif // ADMIN_H

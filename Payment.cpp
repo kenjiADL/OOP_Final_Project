@@ -1,6 +1,6 @@
 #include "Payment.h"
 
-// Constructs a Payment with amount (in cents) and method.
+// Constructs a Payment with amount (in cents) and methods.
 Payment::Payment(int amountCents, PaymentMethod method)
     : pAmountCents(amountCents), pMethod(method) {}
 
@@ -18,7 +18,7 @@ int Payment::getChargedAmount() const
 {
     if (pMethod == PaymentMethod::Card)
     {
-        return pAmountCents + CARD_SURCHARGE_CENTS;
+        return pAmountCents + 25;  // Card surcharge is 25 cents
     }
     return pAmountCents;
 }

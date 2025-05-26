@@ -16,13 +16,12 @@ class Payment
   // Returns the payment method (Cash or Card).
   PaymentMethod getMethod() const;
 
-  // Returns the actual amount charged, including any card surcharge (in cents).
+  // Returns the actual amounnt charged, including any card surcharge.
   int getChargedAmount() const;
 
  private:
   int pAmountCents;
   PaymentMethod pMethod;
-  static constexpr int CARD_SURCHARGE_CENTS = 25;
 };
 
 #endif // PAYMENT_H

@@ -1,7 +1,9 @@
 #include "Product.h"
 
+using namespace std;
+
 // Constructor implementation
-Product::Product(int code, std::string name, int priceCents, int qty)
+Product::Product(int code, string name, int priceCents, int qty)
     : code(code), name(name), price(priceCents), quantity(qty) {}
 
 // Getter implementations
@@ -17,7 +19,7 @@ int Product::getQuantity() const {
     return quantity;
 }
 
-const std::string& Product::getName() const {
+const string& Product::getName() const {
     return name;
 }
 

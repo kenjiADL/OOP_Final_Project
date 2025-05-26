@@ -7,95 +7,115 @@
 #include "Admin.h"
 #include "Product.h"
 
-Admin::Admin(std::vector<std::unique_ptr<Product>>& inventory,
+using namespace std;
+
+Admin::Admin(vector<unique_ptr<Product>>& inventory,
              SalesReport& salesData,
              CRegister& cashRegister,
-             const std::string& inventoryFile,
-             const std::string& adminLogFile)
-    : pInventory(inventory),
-      pSalesData(salesData),
-      pCashRegister(cashRegister),
-      pInventoryFile(inventoryFile),
-      pAdminLogFile(adminLogFile) {}
+             const string& inventoryFile,
+             const string& adminLogFile)
+    : inventory(inventory),
+      salesData(salesData),
+      cashRegister(cashRegister),
+      inventoryFile(inventoryFile),
+      adminLogFile(adminLogFile) {}
 
-void Admin::saveInventory() const {
-    std::ofstream out(pInventoryFile);
+bool Admin::saveInventory() const {
+    ofstream out(inventoryFile);
     if (!out) {
-        std::cerr << "ERROR: could not write " << pInventoryFile << "\n";
-        return;
+        cerr << "ERROR: could not write " << inventoryFile << "\n";
+        return false;
     }
-    for (const auto& item : pInventory) {
+    // Save as CSV: code,name,price,quantity
+    for (const auto& item : inventory) {
         float priceFloat = item->getPrice() / 100.0f;
         out << item->getCode() << ','
             << item->getName() << ','
-            << std::fixed << std::setprecision(2) << priceFloat << ','
+            << fixed << setprecision(2) << priceFloat << ','
             << item->getQuantity() << '\n';
     }
+    return true;
 }
 
 void Admin::removeItem(int code) {
-    auto it = std::find_if(pInventory.begin(), pInventory.end(),
-        [&](const std::unique_ptr<Product>& i){ return i->getCode() == code; });
-    if (it == pInventory.end()) {
-        std::cout << "Invalid code. No item removed.\n";
-        return;
+    auto it = find_if(inventory.begin(), inventory.end(),
+        [&](const unique_ptr<Product>& i){ return i->getCode() == code; });
+    if (it == inventory.end()) {
+        throw InvalidCodeException("Product code " + to_string(code) + " not found");
     }
-    pInventory.erase(it);
+    inventory.erase(it);
     saveInventory();
-    std::cout << "Item removed.\n";
+    cout << "Item removed.\n";
 }
 
 void Admin::showSalesReport() const {
-    std::cout << "Cash Register Balance: $"
-              << std::fixed << std::setprecision(2)
-              << (pCashRegister.getBalance() / 100.0f) << "\n\n";
-    std::cout << "Total Sales: $"
-              << std::fixed << std::setprecision(2)
-              << pSalesData.getTotalSales() << "\n\n";
-    std::cout << "Items sold:\n";
-    for (auto& p : pSalesData.getItemsSold()) {
+    // Show balance and totals
+    cout << "Cash Register Balance: $"
+              << fixed << setprecision(2)
+              << (cashRegister.getBalance() / 100.0f) << "\n\n";
+    cout << "Total Sales: $"
+              << fixed << setprecision(2)
+              << salesData.getTotalSales() << "\n\n";
+    
+    // Show items sold
+    cout << "Items sold:\n";
+    for (auto& p : salesData.getItemsSold()) {
         int code = p.first, qty = p.second;
-        auto it = std::find_if(pInventory.begin(), pInventory.end(),
-            [&](const std::unique_ptr<Product>& i){ return i->getCode() == code; });
-        std::string name = (it != pInventory.end() ? (*it)->getName() : "Unknown");
-        std::cout << "  " << name << " (code " << code << "): " << qty << "\n";
+        auto it = find_if(inventory.begin(), inventory.end(),
+            [&](const unique_ptr<Product>& i){ return i->getCode() == code; });
+        string name = (it != inventory.end() ? (*it)->getName() : "Unknown");
+        cout << "  " << name << " (code " << code << "): " << qty << "\n";
     }
-    std::cout << "\n-- Raw Purchase Log --\n";
-    std::ifstream logIn(pAdminLogFile);
+
+    // Show transaction log
+    cout << "\n-- Raw Purchase Log --\n";
+    ifstream logIn(adminLogFile);
     if (!logIn) {
-        std::cout << "  <no purchases logged yet>\n";
+        cout << "  <no purchases logged yet>\n";
     } else {
-        std::string line;
-        while (std::getline(logIn, line)) {
-            std::cout << "  " << line << "\n";
+        string line;
+        while (getline(logIn, line)) {
+            cout << "  " << line << "\n";
         }
     }
 }
 
 void Admin::setItemPrice(int code, int newPriceCents) {
-    auto it = std::find_if(pInventory.begin(), pInventory.end(),
-        [&](std::unique_ptr<Product>& i){ return i->getCode() == code; });
-    if (it == pInventory.end()) {
-        std::cout << "Invalid code. Price not updated.\n";
-        return;
+    Product* product = findProduct(code);
+    if (!product) {
+        throw InvalidCodeException("Product code " + to_string(code) + " not found");
     }
     if (newPriceCents < 0) {
-        std::cout << "Invalid price. Price must be non-negative.\n";
-        return;
+        throw InvalidQuantityException("Price must be non-negative");
     }
-    (*it)->setPrice(newPriceCents);
+    product->setPrice(newPriceCents);
     saveInventory();
-    std::cout << "Price updated.\n";
+    cout << "Price updated.\n";
 }
 
 void Admin::restockItem(int code, int quantity) {
-    auto it = std::find_if(pInventory.begin(), pInventory.end(),
-        [&](std::unique_ptr<Product>& i){ return i->getCode() == code; });
-    if (it == pInventory.end()) {
-        std::cout << "Invalid code. Stock not updated.\n";
-        return;
+    Product* product = findProduct(code);
+    if (!product) {
+        throw InvalidCodeException("Product code " + to_string(code) + " not found");
     }
-    (*it)->addStock(quantity);
+    if (quantity < 0) {
+        throw InvalidQuantityException("Quantity must be non-negative");
+    }
+    product->addStock(quantity);
     saveInventory();
-    std::cout << "Stock updated.\n";
+    cout << "Stock updated.\n";
+}
+
+size_t Admin::getInventorySize() const {
+    return inventory.size();
+}
+
+bool Admin::hasProduct(int code) const {
+    return findProduct(code) != nullptr;
+}
+
+Product* Admin::findProduct(int code) const {
+    auto it = find_if(inventory.begin(), inventory.end(),
+        [&](const unique_ptr<Product>& i){ return i->getCode() == code; });
+    return (it != inventory.end()) ? it->get() : nullptr;
 }

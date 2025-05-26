@@ -3,17 +3,23 @@
 
 #include <string>
 
+using namespace std;
+
 /**
- * @brief Abstract base for all vending-machine products.
+ * @brief Base class for vending machine products
+ * 
+ * Common features for all product types.
  */
 class Product {
 public:
-  Product(int code, std::string name, int priceCents, int qty);
+  // Initialize a product with its basic attributes
+  Product(int code, string name, int priceCents, int qty);
   virtual ~Product() = default;
 
-  /// Returns a human-readable description including name and price.
-  virtual std::string describe() const = 0;
+  // Each product type provides its own description
+  virtual string describe() const = 0;
 
+  // Basic getters for product attributes
   int getCode() const;
   int getPrice() const;
   int getQuantity() const;
@@ -21,15 +27,16 @@ public:
   /**
    * @brief Returns the product's name.
    */
-  const std::string& getName() const;
+  const string& getName() const;
 
+  // Stock management functions
   void reduceQuantity();
   void addStock(int q);
   void setPrice(int p);
 
 protected:
   int code;
-  std::string name;
+  string name;
   int price;     // in cents
   int quantity;
 };

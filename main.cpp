@@ -22,30 +22,32 @@
 #include "PaymentMethod.h"
 #include "TransactionHistory.h"
 
+using namespace std;
+
 // Show all items with their codes, descriptions, and quantities.
-static void printInventory(const std::vector<std::unique_ptr<Product>>& inventory) {
+static void printInventory(const vector<unique_ptr<Product>>& inventory) {
     for (const auto& p : inventory) {
-        std::cout << p->getCode() << ": "
+        cout << p->getCode() << ": "
                   << p->describe()
                   << " x" << p->getQuantity() << "\n";
     }
 }
 
-static const std::string kInventoryFile   = "inventory.txt";
-static const std::string kAdminLogFile   = "purchase_history.txt";
-static const std::string kSecretPassword  = "admin123";
-static const std::string kAdminTrigger    = "S";
+static const string kInventoryFile   = "inventory.txt";
+static const string kAdminLogFile   = "purchase_history.txt";
+static const string kSecretPassword  = "admin123";
+static const string kAdminTrigger    = "S";
 
 // Save the current inventory to the file so changes are persistent.
-void saveInventory(const std::vector<std::unique_ptr<Product>>& inventory) {
-    std::ofstream out(kInventoryFile);
+void saveInventory(const vector<unique_ptr<Product>>& inventory) {
+    ofstream out(kInventoryFile);
     if (!out) {
-        std::cerr << "ERROR: could not write " << kInventoryFile << "\n";
+        cerr << "ERROR: could not write " << kInventoryFile << "\n";
         return;
     }
     for (const auto& item : inventory) {
         float priceFloat = item->getPrice() / 100.0f;
-        std::string type;
+        string type;
         if (dynamic_cast<Alcoholic*>(item.get())) {
             type = "alcoholic";
         } else if (dynamic_cast<Drink*>(item.get())) {
@@ -56,65 +58,65 @@ void saveInventory(const std::vector<std::unique_ptr<Product>>& inventory) {
         out << item->getCode()   << ','
             << item->getName()     << ','
             << type << ','
-            << std::fixed << std::setprecision(2) << priceFloat << ','
+            << fixed << setprecision(2) << priceFloat << ','
             << item->getQuantity() << '\n';
     }
 }
 
 // Append a purchase entry to the admin log with timestamp.
 void logPurchase(int code,
-                 const std::string& name,
+                 const string& name,
                  float totalCost)
 {
-    std::ofstream log(kAdminLogFile, std::ios::app);
+    ofstream log(kAdminLogFile, ios::app);
     if (!log) {
-        std::cerr << "ERROR: could not write " << kAdminLogFile << "\n";
+        cerr << "ERROR: could not write " << kAdminLogFile << "\n";
         return;
     }
     // Get current time for the log entry.
-    auto now = std::chrono::system_clock::now();
-    std::time_t t = std::chrono::system_clock::to_time_t(now);
+    auto now = chrono::system_clock::now();
+    time_t t = chrono::system_clock::to_time_t(now);
 
     // Log format: code, item name in quotes, cost, and timestamp YYYY-MM-DD HH:MM:SS.
     char buf[32];
-    std::strftime(buf, sizeof(buf), "%F %T", std::localtime(&t));
+    strftime(buf, sizeof(buf), "%F %T", localtime(&t));
     log << code << ' ' << '"' << name << '"' << ' ' << totalCost << ' ' << buf << '\n';
 }
 
 int main() {
     // Load inventory from the default file (not user-configurable).
-    std::vector<std::unique_ptr<Product>> inventory;
+    vector<unique_ptr<Product>> inventory;
     {
-        std::ifstream in(kInventoryFile);
+        ifstream in(kInventoryFile);
         if (!in) {
-            std::cerr << "Failed to open " << kInventoryFile << "\n";
+            cerr << "Failed to open " << kInventoryFile << "\n";
             return 1;
         }
-        std::string line;
-        while (std::getline(in, line)) {
+        string line;
+        while (getline(in, line)) {
             if (line.empty()) continue;
-            std::stringstream ss(line);
-            std::string token;
-            std::getline(ss, token, ',');
-            int code = std::stoi(token);
-            std::getline(ss, token, ',');
-            std::string name = token;
-            std::getline(ss, token, ',');
-            std::string type = token;
-            std::getline(ss, token, ',');
-            float priceFloat = std::stof(token);
-            int priceCents = static_cast<int>(std::round(priceFloat * 100));
-            std::getline(ss, token, ',');
-            int qty = std::stoi(token);
+            stringstream ss(line);
+            string token;
+            getline(ss, token, ',');
+            int code = stoi(token);
+            getline(ss, token, ',');
+            string name = token;
+            getline(ss, token, ',');
+            string type = token;
+            getline(ss, token, ',');
+            float priceFloat = stof(token);
+            int priceCents = static_cast<int>(round(priceFloat * 100));
+            getline(ss, token, ',');
+            int qty = stoi(token);
 
             if (type == "alcoholic") {
-                bool isDiet = name.find("Diet") != std::string::npos;
-                inventory.emplace_back(std::make_unique<Alcoholic>(code, name, priceCents, qty, isDiet));
+                bool isDiet = name.find("Diet") != string::npos;
+                inventory.emplace_back(make_unique<Alcoholic>(code, name, priceCents, qty, isDiet));
             } else if (type == "drink") {
-                bool isDiet = name.find("Diet") != std::string::npos;
-                inventory.emplace_back(std::make_unique<Drink>(code, name, priceCents, qty, isDiet));
+                bool isDiet = name.find("Diet") != string::npos;
+                inventory.emplace_back(make_unique<Drink>(code, name, priceCents, qty, isDiet));
             } else {
-                inventory.emplace_back(std::make_unique<Snack>(code, name, priceCents, qty));
+                inventory.emplace_back(make_unique<Snack>(code, name, priceCents, qty));
             }
         }
     }
@@ -127,27 +129,27 @@ int main() {
     // Create transaction history using raw dynamic memory allocation
     TransactionHistory* transactionHistory = new TransactionHistory(5);
     // Greet the user and display available items.
-    std::cout << "Welcome to the Vending Machine Simulator!\n\n";
-    std::cout << "Available Items:\n";
+    cout << "Welcome to the Vending Machine Simulator!\n\n";
+    cout << "Available Items:\n";
     printInventory(inventory);
-    std::cout << "\n";
+    cout << "\n";
 
     // single-purchase loop
-    std::string input;
-    std::cout << "Enter item code to purchase ("
+    string input;
+    cout << "Enter item code to purchase ("
               << kAdminTrigger << " for admin): ";
-    std::cin >> input;
+    cin >> input;
 
     // Enter admin mode if triggered and authenticated.
     if (input == kAdminTrigger) {
-        std::cout << "Enter secret password: ";
-        std::string pw;
-        std::cin >> pw;
+        cout << "Enter secret password: ";
+        string pw;
+        cin >> pw;
         if (pw == kSecretPassword) {
             Admin admin(inventory, salesData, cashRegister, kInventoryFile, kAdminLogFile);
             bool done = false;
             while (!done) {
-                std::cout << "\n-- Admin Menu --\n"
+                cout << "\n-- Admin Menu --\n"
                           << "1) Remove Item\n"
                           << "2) Show Sales Report\n"
                           << "3) Set Item Price\n"
@@ -156,11 +158,11 @@ int main() {
                           << "6) Exit Admin\n"
                           << "Select option: ";
                 int opt;
-                std::cin >> opt;
+                cin >> opt;
                 switch (opt) {
                     case 1: {
-                        std::cout << "Enter code to remove: ";
-                        int code; std::cin >> code;
+                        cout << "Enter code to remove: ";
+                        int code; cin >> code;
                         admin.removeItem(code);
                         break;
                     }
@@ -168,34 +170,34 @@ int main() {
                         admin.showSalesReport();
                         break;
                     case 3: {
-                        std::cout << "Enter code to update price: ";
-                        int code; std::cin >> code;
-                        std::cout << "Enter new price (e.g. 1.50): ";
-                        float p; std::cin >> p;
-                        admin.setItemPrice(code, static_cast<int>(std::round(p * 100)));
+                        cout << "Enter code to update price: ";
+                        int code; cin >> code;
+                        cout << "Enter new price (e.g. 1.50): ";
+                        float p; cin >> p;
+                        admin.setItemPrice(code, static_cast<int>(round(p * 100)));
                         break;
                     }
                     case 4: {
-                        std::cout << "Enter code to restock: ";
-                        int code; std::cin >> code;
-                        std::cout << "Enter quantity to add: ";
-                        int qty; std::cin >> qty;
+                        cout << "Enter code to restock: ";
+                        int code; cin >> code;
+                        cout << "Enter quantity to add: ";
+                        int qty; cin >> qty;
                         admin.restockItem(code, qty);
                         break;
                     }
                     case 5:
                         // Show transaction history using operator overloading
-                        std::cout << *transactionHistory;
+                        cout << *transactionHistory;
                         break;
                     case 6:
                         done = true;
                         break;
                     default:
-                        std::cout << "Invalid option.\n";
+                        cout << "Invalid option.\n";
                 }
             }
         } else {
-            std::cout << "Incorrect password.\n";
+            cout << "Incorrect password.\n";
         }
         // Clean up dynamic memory before exiting
         delete transactionHistory;
@@ -206,21 +208,21 @@ int main() {
     int code = 0;
     try {
         size_t pos;
-        code = std::stoi(input, &pos);
-        if (pos != input.size()) throw std::invalid_argument("");
+        code = stoi(input, &pos);
+        if (pos != input.size()) throw invalid_argument("");
     } catch (...) {
-        std::cout << "Invalid code entry.\n";
+        cout << "Invalid code entry.\n";
         delete transactionHistory;  // Clean up before exit
         return 0;
     }
 
     // Locate the item by its code and check stock.
-    auto it = std::find_if(
+    auto it = find_if(
         inventory.begin(), inventory.end(),
-        [&](const std::unique_ptr<Product>& i){ return i->getCode() == code; }
+        [&](const unique_ptr<Product>& i){ return i->getCode() == code; }
     );
     if (it == inventory.end() || (*it)->getQuantity() == 0) {
-        std::cout << "Invalid code or out of stock.\n";
+        cout << "Invalid code or out of stock.\n";
         delete transactionHistory;  // Clean up before exit
         return 0;
     }
@@ -228,19 +230,19 @@ int main() {
     // Check if this is an alcoholic drink and verify age
     Alcoholic* alcoholicItem = dynamic_cast<Alcoholic*>(it->get());
     if (alcoholicItem) {
-        std::cout << "This is an alcoholic beverage. Are you 18 years of age or older? (y/n): ";
+        cout << "This is an alcoholic beverage. Are you 18 years of age or older? (y/n): ";
         char ageResponse;
-        std::cin >> ageResponse;
+        cin >> ageResponse;
         if (ageResponse != 'y' && ageResponse != 'Y') {
-            std::cout << "Sorry, you must be 18 years or older to purchase alcoholic beverages.\n";
+            cout << "Sorry, you must be 18 years or older to purchase alcoholic beverages.\n";
             delete transactionHistory;  // Clean up before exit
             return 0;
         }
     }
 
     // Ask customer for payment method: cash or card.
-    std::cout << "Payment method (1 = Cash, 2 = Card): ";
-    int pm; std::cin >> pm;
+    cout << "Payment method (1 = Cash, 2 = Card): ";
+    int pm; cin >> pm;
     PaymentMethod method =
         (pm == 2 ? PaymentMethod::Card : PaymentMethod::Cash);
 
@@ -249,20 +251,20 @@ int main() {
     Payment payment(0, method);
 
     if (method == PaymentMethod::Cash) {
-        std::cout << "Enter payment amount: ";
-        float amtInput; std::cin >> amtInput;
-        int amtCents = static_cast<int>(std::round(amtInput * 100));
+        cout << "Enter payment amount: ";
+        float amtInput; cin >> amtInput;
+        int amtCents = static_cast<int>(round(amtInput * 100));
         payment = Payment(amtCents, method);
         if (payment.getChargedAmount() < itemPriceCents) {
-            std::cout << "Insufficient funds.\n";
+            cout << "Insufficient funds.\n";
             delete transactionHistory;  // Clean up before exit
             return 0;
         }
     } else {
         // card: set base amount = price, surcharge will be added automatically
         payment = Payment(itemPriceCents, method);
-        std::cout << "Card payment processed. Amount charged: $" 
-                  << std::fixed << std::setprecision(2) 
+        cout << "Card payment processed. Amount charged: $" 
+                  << fixed << setprecision(2) 
                   << (payment.getChargedAmount() / 100.0f) 
                   << " (includes $0.25 surcharge)\n";
     }
@@ -276,10 +278,10 @@ int main() {
     salesData.recordSale(code, payment.getChargedAmount());
     logPurchase(code, (*it)->getName(), payment.getChargedAmount() / 100.0f);
     saveInventory(inventory);
-    
+
     // Add transaction to history using dynamic memory
-    std::string transactionRecord = "Item: " + (*it)->getName() + 
-                                   ", Price: $" + std::to_string(payment.getChargedAmount() / 100.0f) +
+    string transactionRecord = "Item: " + (*it)->getName() + 
+                                   ", Price: $" + to_string(payment.getChargedAmount() / 100.0f) +
                                    ", Method: " + (payment.getMethod() == PaymentMethod::Cash ? "Cash" : "Card");
     transactionHistory->addTransaction(transactionRecord);
 
@@ -289,10 +291,10 @@ int main() {
         int changeAmt = cashRegister.dispenseChange(changeDue);
         Change change(changeAmt);
         // Using operator overloading for displaying change
-        std::cout << change;
+        cout << change;
     }
 
-    std::cout << "\nThank you for your purchase!\n";
+    cout << "\nThank you for your purchase!\n";
     
     // Clean up dynamically allocated memory before program ends
     delete transactionHistory;

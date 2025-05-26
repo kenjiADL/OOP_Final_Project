@@ -2,14 +2,16 @@
 #include <sstream>
 #include <iomanip>
 
+using namespace std;
+
 // Constructor implementation
-Alcoholic::Alcoholic(int code, std::string name, int priceCents, int qty, bool isDiet)
+Alcoholic::Alcoholic(int code, string name, int priceCents, int qty, bool isDiet)
     : Drink(code, name, priceCents, qty, isDiet) {}
 
 // describe() method implementation
-std::string Alcoholic::describe() const {
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(2)
+string Alcoholic::describe() const {
+    ostringstream oss;
+    oss << fixed << setprecision(2)
         << (static_cast<float>(getPrice()) / 100.0f);
     return getName()
          + (isDiet() ? " (diet alcoholic drink)" : " (alcoholic drink)")

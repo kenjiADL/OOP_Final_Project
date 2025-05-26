@@ -4,27 +4,33 @@
 #include <map>
 #include <iostream>
 
-// Figure out how to split an amount in cents into coins.
+using namespace std;
+
+/**
+ * @brief Handles coin change calculations
+ * 
+ * Breaks down amounts into available coin denominations.
+ */
 class Change
 {
  public:
-  // Build a Change object to calculate coin counts for the given cents.
+  // Creates change from cents amount
   explicit Change(int cents);
 
-  // Get a map from coin values to their counts.
-  const std::map<int, int>& getChangeBreakdown() const;
+  // Gets coin breakdown
+  const map<int, int>& getChangeBreakdown() const;
 
-  // Operator overloading for displaying change
-  friend std::ostream& operator<<(std::ostream& os, const Change& change);
+  // Display format
+  friend ostream& operator<<(ostream& os, const Change& change);
   
-  // Operator overloading for adding two Change objects
+  // Combines two change amounts
   Change operator+(const Change& other) const;
   
-  // Operator overloading for equality comparison
+  // Compares coin breakdowns
   bool operator==(const Change& other) const;
 
  private:
-  std::map<int, int> pChangeBreakdown;
+  map<int, int> pChangeBreakdown;  // coin value to count
 };
 
 #endif // CHANGE_H

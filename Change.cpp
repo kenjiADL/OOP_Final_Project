@@ -1,10 +1,15 @@
 #include "Change.h"
 #include <vector>
 
+using namespace std;
+
+// Available coin denominations in cents (largest to smallest)
+vector<int> denominations = {100, 50, 20, 10, 5};
+
 // Break down the given cents into coin denominations.
 Change::Change(int cents)
 {
-    std::vector<int> denominations = {100, 50, 20, 10, 5};
+    // Use greedy algorithm: start with largest coins possible
     for (int coin : denominations)
     {
         int count = cents / coin;
@@ -16,13 +21,13 @@ Change::Change(int cents)
     }
 }
 
-const std::map<int, int>& Change::getChangeBreakdown() const
+const map<int, int>& Change::getChangeBreakdown() const
 {
     return pChangeBreakdown;
 }
 
 // Operator overloading for stream output
-std::ostream& operator<<(std::ostream& os, const Change& change)
+ostream& operator<<(ostream& os, const Change& change)
 {
     os << "Change returned:\n";
     for (const auto& pair : change.pChangeBreakdown) {
@@ -34,20 +39,18 @@ std::ostream& operator<<(std::ostream& os, const Change& change)
 // Operator overloading for adding two Change objects
 Change Change::operator+(const Change& other) const
 {
-    // Calculate total cents from both Change objects
+    // Sum up the total cents from both change objects
     int totalCents = 0;
     
-    // Add cents from this object
     for (const auto& pair : pChangeBreakdown) {
         totalCents += pair.first * pair.second;
     }
     
-    // Add cents from other object
     for (const auto& pair : other.pChangeBreakdown) {
         totalCents += pair.first * pair.second;
     }
     
-    // Return new Change object with combined total
+    // Create new change object that will recalculate optimal coins
     return Change(totalCents);
 }
 
