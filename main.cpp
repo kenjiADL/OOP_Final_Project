@@ -3,7 +3,6 @@
 #include <fstream>
 #include <algorithm>
 #include <string>
-#include <limits>
 #include <chrono>
 #include <ctime>
 #include <sstream>
@@ -126,8 +125,9 @@ int main() {
     salesData.loadFromLog(kAdminLogFile);
     CRegister cashRegister;
     
-    // Create transaction history using raw dynamic memory allocation
-    TransactionHistory* transactionHistory = new TransactionHistory(5);
+    // Create transaction history and load previous transactions
+    TransactionHistory* transactionHistory = new TransactionHistory("transactions.txt");
+    transactionHistory->loadFromFile();
     // Greet the user and display available items.
     cout << "Welcome to the Vending Machine Simulator!\n\n";
     cout << "Available Items:\n";
@@ -284,6 +284,9 @@ int main() {
                                    ", Price: $" + to_string(payment.getChargedAmount() / 100.0f) +
                                    ", Method: " + (payment.getMethod() == PaymentMethod::Cash ? "Cash" : "Card");
     transactionHistory->addTransaction(transactionRecord);
+    
+    // Save transaction history to file so it persists
+    transactionHistory->saveToFile();
 
     // Calculate and dispense change in coins (only for cash payments).
     if (payment.getMethod() == PaymentMethod::Cash) {

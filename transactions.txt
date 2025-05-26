@@ -1,0 +1,2 @@
+Item: Coke, Price: $2.000000, Method: Cash
+Item: Wine, Price: $12.000000, Method: Cash
