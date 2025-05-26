@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CREGISTER_H
+#define CREGISTER_H
 
 // Manages the machine's cash: accepts payments and dispenses change.
 class CRegister
@@ -18,3 +19,5 @@ class CRegister
  private:
   int pBalanceCents;
 };
+
+#endif // CREGISTER_H

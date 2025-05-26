@@ -16,7 +16,7 @@ Change::Change(int cents)
     }
 }
 
-std::map<int, int> Change::getChangeBreakdown() const
+const std::map<int, int>& Change::getChangeBreakdown() const
 {
     return pChangeBreakdown;
 }

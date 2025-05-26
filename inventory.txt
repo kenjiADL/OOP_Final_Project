@@ -1,4 +1,4 @@
-1,Coke,drink,1.25,6
+1,Coke,drink,1.25,4
 2,Pepsi,drink,1.50,18
 3,Fanta,drink,1.25,15
 4,Coffee,drink,2.00,10
@@ -12,4 +12,4 @@
 12,Beer,alcoholic,3.50,8
 13,Salad,snack,4.50,5
 14,TrailMix,snack,3.25,15
-15,Wine,alcoholic,8.50,4
+15,Wine,alcoholic,8.50,3

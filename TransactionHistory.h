@@ -1,7 +1,10 @@
-#pragma once
+#ifndef TRANSACTION_HISTORY_H
+#define TRANSACTION_HISTORY_H
 
 #include <string>
 #include <iostream>
+#include <vector>
+#include "Payment.h"
 
 /**
  * @brief Manages a dynamic array of transaction records using raw pointers
@@ -39,12 +42,12 @@ public:
     /**
      * @brief Get the number of transactions stored
      */
-    int getSize() const { return size; }
+    int getSize() const;
     
     /**
      * @brief Get the current capacity of the array
      */
-    int getCapacity() const { return capacity; }
+    int getCapacity() const;
     
     /**
      * @brief Access transaction by index (with bounds checking)
@@ -70,6 +73,11 @@ public:
      */
     void clear();
 
+    TransactionHistory(const std::string& historyFile);
+    void addTransaction(const Payment& payment);
+    void saveToFile() const;
+    void loadFromFile();
+
 private:
     std::string* transactions;  // Raw pointer to dynamic array
     int size;                   // Current number of transactions
@@ -84,4 +92,9 @@ private:
      * @brief Helper function for deep copying
      */
     void copyFrom(const TransactionHistory& other);
-}; 
+
+    std::vector<Payment> pTransactions;
+    std::string pHistoryFile;
+};
+
+#endif // TRANSACTION_HISTORY_H 

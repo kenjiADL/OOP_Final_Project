@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SALES_REPORT_H
+#define SALES_REPORT_H
 
 #include <string>
 #include <map>
@@ -25,3 +26,5 @@ class SalesReport
   int pTotalSalesCents;
   std::map<int, int> pItemsSold;
 };
+
+#endif // SALES_REPORT_H

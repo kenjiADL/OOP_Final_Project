@@ -5,30 +5,42 @@ skinparam classAttributeIconSize 0
 
 
 abstract class Product {
-  - code: int
-  - name: string
-  - price: int
-  - quantity: int
-  --
-  + describe(): string
-  + getName(): string
+  # code: int
+  # name: string
+  # price: int
+  # quantity: int
+  + Product(code: int, name: string, priceCents: int, qty: int)
+  + {abstract} describe(): string
+  + getCode(): int
   + getPrice(): int
   + getQuantity(): int
+  + getName(): string
   + reduceQuantity(): void
   + addStock(q: int): void
   + setPrice(p: int): void
 }
 
 class Snack {
+  + Snack(code: int, name: string, priceCents: int, qty: int)
   + describe(): string
 }
+
 class Drink {
   - diet: bool
+  + Drink(code: int, name: string, priceCents: int, qty: int, isDiet: bool)
   + describe(): string
+  + isDiet(): bool
+}
+
+class Alcoholic {
+  + Alcoholic(code: int, name: string, priceCents: int, qty: int, isDiet: bool)
+  + describe(): string
+  + requiresAgeVerification(): bool
 }
 
 Product <|-- Snack
 Product <|-- Drink
+Drink <|-- Alcoholic
 
 
 class Payment {

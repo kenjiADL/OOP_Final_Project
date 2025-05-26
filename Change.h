@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CHANGE_H
+#define CHANGE_H
 
 #include <map>
 #include <iostream>
@@ -11,7 +12,7 @@ class Change
   explicit Change(int cents);
 
   // Get a map from coin values to their counts.
-  std::map<int, int> getChangeBreakdown() const;
+  const std::map<int, int>& getChangeBreakdown() const;
 
   // Operator overloading for displaying change
   friend std::ostream& operator<<(std::ostream& os, const Change& change);
@@ -25,3 +26,5 @@ class Change
  private:
   std::map<int, int> pChangeBreakdown;
 };
+
+#endif // CHANGE_H

@@ -1,13 +1,5 @@
-#pragma once
-
-#include <vector>
-#include <string>
-#include <memory>
-#include "Product.h"
-#include "SalesReport.h"
-#include "CRegister.h"
-
-#pragma once
+#ifndef ADMIN_H
+#define ADMIN_H
 
 #include <vector>
 #include <string>
@@ -64,3 +56,5 @@ class Admin {
   // Write the current inventory vector back into the CSV file.
   void saveInventory() const;
 };
+
+#endif // ADMIN_H

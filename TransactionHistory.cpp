@@ -72,6 +72,15 @@ std::ostream& operator<<(std::ostream& os, const TransactionHistory& history) {
     return os;
 }
 
+// Getter implementations
+int TransactionHistory::getSize() const {
+    return size;
+}
+
+int TransactionHistory::getCapacity() const {
+    return capacity;
+}
+
 // Clear all transactions
 void TransactionHistory::clear() {
     size = 0;  // Reset size (don't need to clear strings, just reset counter)

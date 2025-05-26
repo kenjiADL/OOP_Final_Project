@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PAYMENT_H
+#define PAYMENT_H
 
 #include "PaymentMethod.h"
 
@@ -23,3 +24,5 @@ class Payment
   PaymentMethod pMethod;
   static constexpr int CARD_SURCHARGE_CENTS = 25;
 };
+
+#endif // PAYMENT_H

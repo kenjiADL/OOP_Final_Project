@@ -1,8 +1,7 @@
-#pragma once
+#ifndef ALCOHOLIC_H
+#define ALCOHOLIC_H
 
 #include "Drink.h"
-#include <sstream>
-#include <iomanip>
 
 /**
  * @brief An alcoholic drink that requires age verification.
@@ -13,17 +12,10 @@ public:
               std::string name,
               int priceCents,
               int qty,
-              bool isDiet = false)
-        : Drink(code, std::move(name), priceCents, qty, isDiet) {}
+              bool isDiet = false);
 
-    std::string describe() const override {
-        std::ostringstream oss;
-        oss << std::fixed << std::setprecision(2)
-            << (static_cast<float>(getPrice()) / 100.0f);
-        return name
-             + (isDiet() ? " (diet alcoholic drink)" : " (alcoholic drink)")
-             + " – $" + oss.str();
-    }
+    std::string describe() const override;
+    bool requiresAgeVerification() const;
+};
 
-    bool requiresAgeVerification() const { return true; }
-}; 
+#endif // ALCOHOLIC_H 
